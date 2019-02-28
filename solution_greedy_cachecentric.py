@@ -169,41 +169,33 @@ cacheVideoAssignments = {}
 for cid in range(0, cacheServerCount):
 	cacheVideoAssignments[cid] = []
 
-# find the smallest video 
-minVideoSize = min(videoSize)
-
 # for each cache, fill it up with the stuff that looks the best
 for cid in range(0, cacheServerCount): 
-	cacheRemainingCapacity = cacheServerCapacity
-	while True:
-		bestVid = -1; 
-		bestScore = -1; 
 
-		# If this cache can no longer hold ANY videos, we're done with this cache
-		if (cacheRemainingCapacity < minVideoSize):
-			break
-
-		for vid in range(0, videoCount):
-			size = videoSize[vid]
-
-			# If this video cannot fit in this cache or is already in it, continue
-			if (cacheRemainingCapacity < size) or (vid in cacheVideoAssignments[cid]):
-				continue
-
-			# Score the potential placement of this video in this cache
-			# Video size is factored in, smaller videos are prioritized
-			score = realisticValueOfVideoInCache(vid, cid) / size
-			if (score > 0) and (score > bestScore):
-				bestVid = vid
-				bestScore = score
-
-		# Perform the chosen placement and update the new remaining capacity 
-		# If no choices are possible, we're done here. 
-		if (bestVid != -1):
-			cacheVideoAssignments[cid].append(bestVid)
-			cacheRemainingCapacity -= videoSize[bestVid]
+	# Score each video for this cache
+	vidScores = {}
+	for vid in range(0,videoCount):
+		size = videoSize[vid]
+		if (cacheServerCapacity < size):
+			vidScores[vid] = -1
 		else:
+			vidScores[vid] = (realisticValueOfVideoInCache(vid, cid) / size)
+
+	# Put in the videos in best-order until there is no space left. 
+	bestVids = sorted(vidScores.items(), key=lambda x: x[1], reverse=True)
+	cacheRemainingCapacity = cacheServerCapacity
+	for bestVid in bestVids:
+		# Once we get to the zero-scoring videos, we're done here. 
+		score = bestVid[1]
+		if (score <= 0):
 			break
+		# If we can fit this video let's put it in. 
+		size = videoSize[bestVid[0]]
+		if (cacheRemainingCapacity > videoSize[bestVid[0]]):
+			cacheVideoAssignments[cid].append(bestVid[0])
+			cacheRemainingCapacity -= size
+
+	print('Finished allocating cache {0}'.format(cid))
 
 #########################
 
