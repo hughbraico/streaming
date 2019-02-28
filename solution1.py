@@ -106,18 +106,21 @@ def valueOfVideoInCache(vid : int, cid : int):
     if videoSize[vid] > cacheServerCapacity:
         return 0
 
-    if vid not in videoRequestsFromEndpoint:
+    totalValue = 0
+    for eid in videoRequestsFromEndpoint[vid]:
+        totalValue += videoRequestsFromEndpoint[vid][eid] * (endpointDataCenterLatency[eid] - endpointCacheLatency[eid][cid])
+
+    return totalValue
+
+# returns the value of a video vid if it were put in cache cid
+# DOES factor in the contents of other caches... but is slower
+def realisticValueOfVideoInCache(vid : int, cid : int):
+    if videoSize[vid] > cacheServerCapacity:
         return 0
 
     totalValue = 0
-
     for eid in videoRequestsFromEndpoint[vid]:
-        if eid not in endpointCacheLatency:
-            continue
-        if cid not in endpointCacheLatency[eid]:
-            continue
-
-        totalValue += videoRequestsFromEndpoint[vid][eid] * (endpointDataCenterLatency[eid] - endpointCacheLatency[eid][cid])
+    	totalValue += max(0, videoRequestsFromEndpoint[vid][eid] * (currentBestVideoEndpointLatency(vid, eid, cacheVideoAssignments) - endpointCacheLatency[eid][cid]))
 
     return totalValue
 
@@ -213,7 +216,7 @@ while True:
 
         # get all videos onto the list on videoTable
         for vid in range(0, videoCount):
-            videoTable.append((vid, videoSize[vid], valueOfVideoInCache(vid, cid)))
+            videoTable.append((vid, videoSize[vid], realisticValueOfVideoInCache(vid, cid)))
 
         videoTable = sorted(videoTable, key=lambda V : (V[2] / V[1], V[1], V[0]))
 
