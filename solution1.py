@@ -114,12 +114,33 @@ def valueOfVideoInCache(vid : int, cid : int):
 
     return totalValue
 
+# gives the best current latency for a video and endpoint. 
+# If the video isn't in a connected cache, this will be the datacentre latency.
+# Takes a video id, endpoint id, and a list of cache-video assignments 
+def currentBestVideoEndpointLatency(vid, eid, cacheVideoAssignments):
+	ret = endpointDataCenterLatency[eid]
+
+	# search for the video in connected caches
+	# find the fastest one it's connected to 
+	for cid in range(0, cacheServerCount):
+		if cid in endpointCacheLatency[eid] and endpointCacheLatency[eid][cid] < ret: 
+			for assignedVid in cacheVideoAssignments[cid]:
+				if (assignedVid == vid):
+					ret = endpointCacheLatency[eid][cid]
+
+	return ret
+
 #============================================#
 #   do the thing                             #
 #============================================#
 
-# delete
-print('input consumed without error')
+# this stores our answers to the question. 
+cacheVideoAssignments = {}
+for cid in range(0, cacheServerCount):
+	cacheVideoAssignments[cid] = []
+
+# do the thing
+
 
 # videoCount
 # endpointCount
@@ -135,3 +156,14 @@ for vid in range(0, videoCount):
     print('vid {0}:'.format(vid))
     for cid in range(0, cacheServerCount):
         print('\tcid {0} -> {1}'.format(cid, valueOfVideoInCache(vid, cid)))
+
+
+#########################
+
+# print the solution
+print(str(cacheServerCount))
+for cid in range(0, cacheServerCount):
+    print(str(cid), end='')
+    for vid in cacheVideoAssignments[cid]:
+        print(' ' + str(vid), end='')
+    print('')
