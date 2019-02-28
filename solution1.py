@@ -164,6 +164,17 @@ for vid in range(0, videoCount):
     for cid in range(0, cacheServerCount):
         print('\tcid {0} -> {1}'.format(cid, valueOfVideoInCache(vid, cid)))
 
+#########################
+
+# score the solution 
+solutionScore = 0
+# go through every request to see how much latency was saved on it 
+for vid in videoRequestsFromEndpoint: 
+	for eid in videoRequestsFromEndpoint[vid]:
+		requestCount = videoRequestsFromEndpoint[vid][eid]
+		bestLatency = currentBestVideoEndpointLatency(vid, eid, cacheVideoAssignments)
+		solutionScore += 1000 * requestCount * (endpointDataCenterLatency[eid] - bestLatency)
+print('Total score = {0}'.format(solutionScore))
 
 #########################
 
