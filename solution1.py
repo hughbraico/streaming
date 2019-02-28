@@ -167,14 +167,17 @@ for vid in range(0, videoCount):
 #########################
 
 # score the solution 
-solutionScore = 0
+timeSaved = 0
+totalRequests = 0 
 # go through every request to see how much latency was saved on it 
 for vid in videoRequestsFromEndpoint: 
 	for eid in videoRequestsFromEndpoint[vid]:
 		requestCount = videoRequestsFromEndpoint[vid][eid]
 		bestLatency = currentBestVideoEndpointLatency(vid, eid, cacheVideoAssignments)
-		solutionScore += 1000 * requestCount * (endpointDataCenterLatency[eid] - bestLatency)
-print('Total score = {0}'.format(solutionScore))
+		timeSaved += requestCount * (endpointDataCenterLatency[eid] - bestLatency)
+		totalRequests += requestCount
+
+print('{0} ms saved on average'.format(timeSaved / totalRequests))
 
 #########################
 
