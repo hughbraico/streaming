@@ -137,6 +137,22 @@ def currentBestVideoEndpointLatency(vid, eid, cacheVideoAssignments):
 
 	return ret
 
+# gives the best possible latency for a video and endpoint (ie. if the video was cached ideally).
+# If the endpoint has no connected caches OR the video is too large for a cache, returns the datacenter latency.
+def bestPossibleVideoEndpointLatency(vid, eid):
+	ret = endpointDataCenterLatency[eid]
+
+	# if the video is too large to fit in a cache, we're done here
+	if (videoSize[vid] > cacheServerCapacity):
+		return ret
+
+	# look at all connected caches, find the fastest one it's connected to 
+	for cid in range(0, cacheServerCount):
+		if endpointCacheLatency[eid][cid] < ret: 
+			ret = endpointCacheLatency[eid][cid]
+
+	return ret
+
 #============================================#
 #   do the thing                             #
 #============================================#
@@ -234,16 +250,32 @@ while True:
 
 #########################
 
+# sanity check - make sure no cache is overfilled 
+for cid in range(0, cacheServerCount): 
+	capacityUsed = 0
+	for vid in cacheVideoAssignments[cid]: 
+		capacityUsed += videoSize[vid]
+	if (capacityUsed > cacheServerCapacity): 
+		print('ERROR: cache {0} is overfilled (cheater!)'.format(cid))
+
 # score the solution 
 timeSaved = 0
 totalRequests = 0 
 # go through every request to see how much latency was saved on it 
 for vid in videoRequestsFromEndpoint: 
 	for eid in videoRequestsFromEndpoint[vid]:
+		# find the time saved by caching the video (if any)
 		requestCount = videoRequestsFromEndpoint[vid][eid]
 		bestLatency = currentBestVideoEndpointLatency(vid, eid, cacheVideoAssignments)
-		timeSaved += requestCount * (endpointDataCenterLatency[eid] - bestLatency)
+		requestTimeSaved = requestCount * (endpointDataCenterLatency[eid] - bestLatency)
+		timeSaved += requestTimeSaved
 		totalRequests += requestCount
+
+		#find the ideal time save if the video was cached in the fastest possible cache 
+		idealLatency = bestPossibleVideoEndpointLatency(vid, eid)
+		idealTimeSaved = requestCount * (endpointDataCenterLatency[eid] - idealLatency)
+
+		print('vid {0} at eid {1} saved {2} ms (ideal = {3})'.format(vid, eid, requestTimeSaved, idealTimeSaved))
 
 print('{0} ms saved on average'.format(timeSaved / totalRequests))
 
