@@ -93,14 +93,33 @@ except:
 #   helper functions                         #
 #============================================#
 
-
+# gives the best current latency for a video and endpoint. 
+# If the video isn't in a connected cache, this will be the datacentre latency.
+# Takes a video id, endpoint id, and a list of 
+def currentBestVideoEndpointLatency(vid, eid, cacheVideoAssignments):
+	ret = endpointDataCenterLatency[eid]
+	return ret
 
 #============================================#
 #   do the thing                             #
 #============================================#
 
-# delete
-print('input consumed without error')
+# this stores our answers to the question. 
+cacheVideoAssignments = {}
+for cid in range(0, cacheServerCount):
+	cacheVideoAssignments[cid] = []
+
+# do the thing
+
+
+
+# print the solution
+print(str(cacheServerCount))
+for cid in range(0, cacheServerCount):
+	print(str(cid), end='')
+	for vid in cacheVideoAssignments[cid]:
+		print(' ' + str(vid), end='')
+	print('')
 
 # videoCount
 # endpointCount
