@@ -152,18 +152,89 @@ for cid in range(0, cacheServerCount):
 # endpointCacheLatency[endpoint id][cache id] = <latency from that endpoint to that cache>
 # videoRequestsFromEndpoint[video id][endpoint id] = <number of requests for that video from that endpoint>
 
-for vid in range(0, videoCount):
-    print('vid {0}:'.format(vid))
+roundContestants = -1
+while True:
+    roundAssignments = {}
+
+    # get all caches that aren't filled
     for cid in range(0, cacheServerCount):
-        print('\tcid {0} -> {1}'.format(cid, valueOfVideoInCache(vid, cid)))
+        if len(cacheVideoAssignments[cid]) == 0:
+            roundAssignments[cid] = []
 
+    # the number of assignments this time is the same as
+    #   the number of contestants from last time
+    # it is expected to go down with each iteration
+    # if it doesn't go down in one iteration, it will not go down
+    #   in the next iteration
+    currentRoundContestants = len(roundAssignments)
+    if (currentRoundContestants == roundContestants):
+        break
+    elif currentRoundContestants == 0:
+        # also break if there's nothing left to assign
+        break
+    else:
+        roundContestants = currentRoundContestants
 
-#########################
+    valueTable = {}
+
+    # for each participating cache in this round of assignments
+    for cid in roundAssignments:
+        valueTable[cid] = 0
+        cvideos = roundAssignments[cid]
+
+        # contains tuples of the following:
+        #   vid
+        #   size
+        #   worth on this cache
+        videoTable = []
+
+        # get all videos onto the list on videoTable
+        for vid in range(0, videoCount):
+            videoTable.append((vid, videoSize[vid], valueOfVideoInCache(vid, cid)))
+
+        videoTable = sorted(videoTable, key=lambda V : (V[2] / V[1], V[1], V[0]))
+
+        # start coalescing results into the cache server
+        remainingCapacity = cacheServerCapacity
+        for V in videoTable:
+            vid = V[0]
+            size = V[1]
+            worth = V[2]
+
+            # unworthy videos get no spot
+            if (worth == 0):
+                continue
+
+            # only add a video of it will fit
+            if (size <= remainingCapacity):
+                remainingCapacity -= size
+                cvideos.append(vid)
+                valueTable[cid] += worth
+
+                # no capacity left, done packing
+                if (remainingCapacity == 0):
+                    break
+            else:
+                continue
+
+    # sort the results 
+    roundAssignments = sorted(roundAssignments.items(), key=lambda A : (valueTable[A[0]], A[0]), reverse=True)
+
+    bestAssignment = roundAssignments[0]
+
+    # add the best result to the
+    cacheVideoAssignments[bestAssignment[0]] = bestAssignment[1]
+
+#============================================#
+#   print the thing                          #
+#============================================#
 
 # print the solution
+#cacheVideoAssignments = sorted(cacheVideoAssignments.items(), key=lambda A : A[0])
 print(str(cacheServerCount))
 for cid in range(0, cacheServerCount):
     print(str(cid), end='')
+    #cacheVideoAssignments[cid] = sorted(cacheVideoAssignments)
     for vid in cacheVideoAssignments[cid]:
         print(' ' + str(vid), end='')
     print('')
