@@ -95,9 +95,18 @@ except:
 
 # gives the best current latency for a video and endpoint. 
 # If the video isn't in a connected cache, this will be the datacentre latency.
-# Takes a video id, endpoint id, and a list of 
+# Takes a video id, endpoint id, and a list of cache-video assignments 
 def currentBestVideoEndpointLatency(vid, eid, cacheVideoAssignments):
 	ret = endpointDataCenterLatency[eid]
+
+	# search for the video in connected caches
+	# find the fastest one it's connected to 
+	for cid in range(0, cacheServerCount):
+		if cid in endpointCacheLatency[eid] and endpointCacheLatency[eid][cid] < ret: 
+			for assignedVid in cacheVideoAssignments[cid]:
+				if (assignedVid == vid):
+					ret = endpointCacheLatency[eid][cid]
+
 	return ret
 
 #============================================#
