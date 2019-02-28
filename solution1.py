@@ -51,11 +51,18 @@ try:
     for e in range(0, endpointCount):
         eargs = input().split(' ')
 
+        # Determine datacenter latency for this endpoint.
         latency = int(eargs[0])
         endpointDataCenterLatency[e] = latency
-
-        endpointCacheLatency[e] = {}
         cachesConnected = int(eargs[1])
+
+        # Initalize every cache latency as equal to datacenter latency
+        # This makes the hashtable fully connected.  
+        endpointCacheLatency[e] = {}
+        for cid in range(0, cacheServerCount):
+        	endpointCacheLatency[e][cid] = latency
+
+    	# Determine latency of connected caches. 
         for c in range(0, cachesConnected):
             cargs = input().split(' ')
 
@@ -120,10 +127,10 @@ def valueOfVideoInCache(vid : int, cid : int):
 def currentBestVideoEndpointLatency(vid, eid, cacheVideoAssignments):
 	ret = endpointDataCenterLatency[eid]
 
-	# search for the video in connected caches
-	# find the fastest one it's connected to 
+	# search for the video in connected caches, find the fastest one it's connected to 
+	# Assumes fully connected endpointCacheLatency
 	for cid in range(0, cacheServerCount):
-		if cid in endpointCacheLatency[eid] and endpointCacheLatency[eid][cid] < ret: 
+		if endpointCacheLatency[eid][cid] < ret: 
 			for assignedVid in cacheVideoAssignments[cid]:
 				if (assignedVid == vid):
 					ret = endpointCacheLatency[eid][cid]
