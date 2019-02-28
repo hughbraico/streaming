@@ -137,12 +137,10 @@ def currentBestVideoEndpointLatency(vid, eid, cacheVideoAssignments):
 	ret = endpointDataCenterLatency[eid]
 
 	# search for the video in connected caches, find the fastest one it's connected to 
-	# Assumes fully connected endpointCacheLatency
 	for cid in range(0, cacheServerCount):
-		if endpointCacheLatency[eid][cid] < ret: 
-			for assignedVid in cacheVideoAssignments[cid]:
-				if (assignedVid == vid):
-					ret = endpointCacheLatency[eid][cid]
+		latency = endpointCacheLatency[eid][cid]
+		if (latency < ret) and (vid in cacheVideoAssignments[cid]): 
+			ret = latency
 
 	return ret
 
@@ -202,19 +200,18 @@ while True:
 			# Score the potential placement of this video in this cache
 			# Video size is factored in, smaller videos are prioritized
 			score = realisticValueOfVideoInCache(vid, cid) / size
-			if (score > bestScore):
+			if (score > 0) and (score > bestScore):
 				bestVid = vid
 				bestCid = cid
 				bestScore = score
 
 	# Perform the chosen placement and update the new remaining capacity 
 	# If no choices are possible, we're done here. 
-	if (bestVid == -1 or bestScore == 0):
-		break
-	else:
+	if (bestVid != -1):
 		cacheVideoAssignments[bestCid].append(bestVid)
 		cacheRemainingCapacity[bestCid] -= videoSize[bestVid]
-
+	else:
+		break
 
 #########################
 

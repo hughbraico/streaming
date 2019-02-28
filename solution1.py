@@ -38,8 +38,6 @@ except:
 # get endpoint data
 
 # hashtable for:
-
-# hashtable for:
 # endpointDataCenterLatency[<endpoint id>] = <latency to that endpoint>
 endpointDataCenterLatency = {}
 
