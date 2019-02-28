@@ -106,6 +106,9 @@ def valueOfVideoInCache(vid : int, cid : int):
     if videoSize[vid] > cacheServerCapacity:
         return 0
 
+    if vid not in videoRequestsFromEndpoint:
+        return 0
+
     totalValue = 0
     for eid in videoRequestsFromEndpoint[vid]:
         totalValue += videoRequestsFromEndpoint[vid][eid] * (endpointDataCenterLatency[eid] - endpointCacheLatency[eid][cid])
@@ -116,6 +119,9 @@ def valueOfVideoInCache(vid : int, cid : int):
 # DOES factor in the contents of other caches... but is slower
 def realisticValueOfVideoInCache(vid : int, cid : int):
     if videoSize[vid] > cacheServerCapacity:
+        return 0
+
+    if vid not in videoRequestsFromEndpoint:
         return 0
 
     totalValue = 0
