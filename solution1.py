@@ -93,7 +93,26 @@ except:
 #   helper functions                         #
 #============================================#
 
+# returns the value of a video vid if it were put in cache cid
+# does not regard contents of any cache
+def valueOfVideoInCache(vid : int, cid : int):
+    if videoSize[vid] > cacheServerCapacity:
+        return 0
 
+    if vid not in videoRequestsFromEndpoint:
+        return 0
+
+    totalValue = 0
+
+    for eid in videoRequestsFromEndpoint[vid]:
+        if eid not in endpointCacheLatency:
+            continue
+        if cid not in endpointCacheLatency[eid]:
+            continue
+
+        totalValue += videoRequestsFromEndpoint[vid][eid] * (endpointDataCenterLatency[eid] - endpointCacheLatency[eid][cid])
+
+    return totalValue
 
 #============================================#
 #   do the thing                             #
@@ -107,6 +126,12 @@ print('input consumed without error')
 # requestCount
 # cacheServerCount
 # cacheServerCapacity
+# videoSize
 # endpointDataCenterLatency[<endpoint id>] = <latency to that endpoint>
 # endpointCacheLatency[endpoint id][cache id] = <latency from that endpoint to that cache>
 # videoRequestsFromEndpoint[video id][endpoint id] = <number of requests for that video from that endpoint>
+
+for vid in range(0, videoCount):
+    print('vid {0}:'.format(vid))
+    for cid in range(0, cacheServerCount):
+        print('\tcid {0} -> {1}'.format(cid, valueOfVideoInCache(vid, cid)))
